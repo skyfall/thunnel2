@@ -2,6 +2,8 @@
 #define COMMON_H_
 
 #include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include "log.h"
 // typedef unsigned int u32_t;
 typedef int i32_t;

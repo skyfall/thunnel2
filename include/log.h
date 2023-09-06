@@ -20,6 +20,8 @@ const int log_end = 7;
 
 #define mylog(...) log0(__FILE__, __FUNCTION__, __LINE__, __VA_ARGS__)
 
+extern int enable_log_color;
+
 
 const char log_color[][20] = {RED, RED, RED, YEL, GRN, MAG, ""};
 const char log_text[][20] = {"NEVER", "FATAL", "ERROR", "WARN", "INFO", "DEBUG", "TRACE", ""};
