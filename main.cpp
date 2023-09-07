@@ -1,37 +1,41 @@
 #include <uv.h>
 #include <stdlib.h>
-// #include <assert.h>
 #include <string>
+
 #include "tun.h"
-// #include "common.h"
+#include "options.h"
 
 
 uv_loop_t loop;
 
 void per_hanld(uv_prepare_t* handle){
-    printf("per_hanld\t\t start\n");
-    sleep(1);
-    printf("per_hanld\t\t end\n");
+
 }
 
-int main(){
-    int tun_fd;
-    std::string tun_dev = "tun999";
-    int tun_mtu = 1500;
+int main(int argc, char const *argv[]){
+
+    // 参数解析
+    assert(para_argv(argc,argv) == 0);
+
+
+
+    int tun_fd,tun_fd2;
     u32_t sub_net_uint32 = 0;
 
-    sub_net_uint32 = inet_addr("10.22.22.0");
 
     uv_loop_init(&loop);
 
-    tun_fd = get_tun_fd(tun_dev.c_str());
+    tun_fd = get_tun_fd(&options_arg);
     assert(tun_fd > 0);
 
-    assert(set_tun(tun_dev.c_str(), htonl((ntohl(sub_net_uint32) & 0xFFFFFF00) | 2), htonl((ntohl(sub_net_uint32) & 0xFFFFFF00) | 1), tun_mtu) == 0);
+
+
+    assert(set_tun(&options_arg) == 0);
 
     
     int tun_fd_events = UV_READABLE;
     uv_poll_t tun_poll;
+
 
     printf(" start tun_fd:%d\n",tun_fd);
     tun_poll.data = &tun_fd;

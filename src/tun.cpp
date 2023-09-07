@@ -2,24 +2,27 @@
 #include "tun.h"
 #include "common.h"
 
-int get_tun_fd(const char *dev_name)
+
+
+int get_tun_fd(const struct options *options_arg)
 {
-    int tun_fd = open("/dev/net/tun", O_RDWR);
+    int res_code = 0;
+    int tun_fd = open(options_arg->tun_path.c_str(), O_RDWR);
 
     if (tun_fd < 0)
     {
-        mylog(log_fatal, "open /dev/net/tun failed");
+        mylog(log_fatal, "open %s failed",options_arg->tun_path.c_str());
         myexit(-1);
     }
     struct ifreq ifr;
     memset(&ifr, 0, sizeof(ifr));
     ifr.ifr_flags = IFF_TUN | IFF_NO_PI;
 
-    strncpy(ifr.ifr_name, dev_name, IFNAMSIZ);
+    strncpy(ifr.ifr_name, options_arg->tun_name.c_str(), IFNAMSIZ);
 
     if (ioctl(tun_fd, TUNSETIFF, (void *)&ifr) != 0)
     {
-        mylog(log_fatal, "open /dev/net/tun failed");
+        mylog(log_fatal, "open creat tun ifr failed err:%d");
         myexit(-1);
     }
 
@@ -28,10 +31,12 @@ int get_tun_fd(const char *dev_name)
     //         mylog(log_warn, "failed to set tun persistent");
     //     }
     // }
+    // int bufsize = 1024 * 1024; // 1MB
+    // assert( setsockopt(tun_fd, SOL_SOCKET, SO_RCVBUF, &bufsize, sizeof(bufsize))  == 0);
     return tun_fd;
 }
 
-int set_tun(const char *if_name, u32_t local_ip, u32_t remote_ip, int mtu)
+int set_tun( const struct options *options_arg)
 {
     // if (manual_set_tun) return 0;
 
@@ -42,25 +47,29 @@ int set_tun(const char *if_name, u32_t local_ip, u32_t remote_ip, int mtu)
     memset(&sai, 0, sizeof(struct sockaddr));
 
     int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-    strncpy(ifr.ifr_name, if_name, IFNAMSIZ);
+    strncpy(ifr.ifr_name, options_arg->tun_name.c_str(), IFNAMSIZ);
 
     sai.sin_family = AF_INET;
     sai.sin_port = 0;
 
-    sai.sin_addr.s_addr = local_ip;
+    sai.sin_addr.s_addr = options_arg->local_ip_u;
     memcpy(&ifr.ifr_addr, &sai, sizeof(struct sockaddr));
     assert(ioctl(sockfd, SIOCSIFADDR, &ifr) == 0); // set source ip
 
-    sai.sin_addr.s_addr = remote_ip;
+    sai.sin_addr.s_addr = options_arg->local_netmask_u;
+    memcpy(&ifr.ifr_addr, &sai, sizeof(struct sockaddr));
+    assert(ioctl(sockfd, SIOCSIFNETMASK, &ifr) == 0); // set source netmask
+
+    sai.sin_addr.s_addr = options_arg->remove_tun_ip_u;
     memcpy(&ifr.ifr_addr, &sai, sizeof(struct sockaddr));
     assert(ioctl(sockfd, SIOCSIFDSTADDR, &ifr) == 0); // set dest ip
 
-    ifr.ifr_mtu = mtu;
+    ifr.ifr_mtu = options_arg->mtu;
     assert(ioctl(sockfd, SIOCSIFMTU, &ifr) == 0); // set mtu
 
     assert(ioctl(sockfd, SIOCGIFFLAGS, &ifr) == 0);
-    // ifr.ifr_flags |= ( IFF_UP|IFF_POINTOPOINT|IFF_RUNNING|IFF_NOARP|IFF_MULTICAST );
-    ifr.ifr_flags = (IFF_UP | IFF_POINTOPOINT | IFF_RUNNING | IFF_NOARP | IFF_MULTICAST); // set interface flags
+    ifr.ifr_flags |= ( IFF_UP|IFF_POINTOPOINT|IFF_RUNNING|IFF_NOARP|IFF_MULTICAST );
+    // ifr.ifr_flags = (IFF_UP | IFF_POINTOPOINT | IFF_RUNNING | IFF_NOARP | IFF_MULTICAST); // set interface flags
     assert(ioctl(sockfd, SIOCSIFFLAGS, &ifr) == 0);
 
     // printf("i m here2\n");
@@ -81,14 +90,20 @@ void tun_read_cb(uv_poll_t *handle, int status, int events)
         return;
     }
 
-    int buff_len = 1500;
+    // int buff_len = 1500;
     int tun_fd = *(int*)handle->data;
-    // printf("fd_id:%d\n",tun_fd);
-    char buffer[buff_len];
 
-    printf("read\t\tstart\n");
-    int nread = read(tun_fd,&buffer,buff_len);
-    printf("read\t\tend\n");
+    const  int iov_num = 2;
+    struct iovec iov[iov_num];
+    char buf[iov_num][1500];
+
+
+    for(int i = 0; i < iov_num ;i++){
+        iov[i].iov_len = 1550;
+        iov[i].iov_base = buf[i];
+    }
+
+    const int  nread = readv(tun_fd,iov,iov_num);
     if(nread == 0) {  // 已断开连接
         return;
     }
@@ -96,5 +111,5 @@ void tun_read_cb(uv_poll_t *handle, int status, int events)
         return;
 	}
 
-    printf("tun_read_cb len:%d \t\t data:%-8X\n",nread);
+    printf("tun_read_cb len:%d \t\t \n",nread);
 }

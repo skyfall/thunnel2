@@ -13,13 +13,14 @@
 #include <unistd.h>
 #include <uv.h>
 
+#include "options.h"
 #include"common.h"
 #include "log.h"
 
 
-int get_tun_fd(const char *dev_name) ;
+int get_tun_fd( const struct options *options_arg) ;
 
-int set_tun(const char *if_name, u32_t local_ip, u32_t remote_ip, int mtu);
+int set_tun( const struct options *options_arg);
 
 
 void tun_read_cb(uv_poll_t* handle, int status, int events);

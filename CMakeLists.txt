@@ -24,15 +24,18 @@ set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 include(CPack)
 
 
-find_package(Boost 1.82.0 REQUIRED COMPONENTS     )
+find_package(Boost 1.82.0 REQUIRED COMPONENTS  program_options   )
 target_link_libraries (${PROJECT_NAME} PRIVATE
     pthread 
     Boost::boost 
+    Boost::program_options
     # Boost::asio
 ) 
 
 find_package(libuv CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE $<IF:$<TARGET_EXISTS:libuv::uv_a>,libuv::uv_a,libuv::uv>)
 
+find_package(kcp CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE kcp::kcp)
 
 # target_link_libraries(${PROJECT_NAME} PRIVATE Boost::boost Boost::asio)
