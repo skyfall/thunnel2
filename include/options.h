@@ -15,18 +15,20 @@ struct options
     std::string  listen;
     std::string  remove_tun_ip;
     std::string  local_ip;
+    std::string  local_ip_netmask;
     std::string  mode;
 
     u32_t local_ip_u;
-    int local_netmask_u;
+    u32_t local_netmask_u;
 
     int remove_tun_ip_u;
 
     int mtu ;
+    uint16_t remove_port;
 
 } ;
 
-static struct options options_arg; 
+extern struct options options_arg; 
 
 
 int para_argv(int argc, char const *argv[]);

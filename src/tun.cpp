@@ -9,11 +9,8 @@ int get_tun_fd(const struct options *options_arg)
     int res_code = 0;
     int tun_fd = open(options_arg->tun_path.c_str(), O_RDWR);
 
-    if (tun_fd < 0)
-    {
-        mylog(log_fatal, "open %s failed",options_arg->tun_path.c_str());
-        myexit(-1);
-    }
+    assest_mylog( tun_fd > 0, "open [%s] failed",options_arg->tun_path.c_str());
+
     struct ifreq ifr;
     memset(&ifr, 0, sizeof(ifr));
     ifr.ifr_flags = IFF_TUN | IFF_NO_PI;
@@ -69,10 +66,8 @@ int set_tun( const struct options *options_arg)
 
     assert(ioctl(sockfd, SIOCGIFFLAGS, &ifr) == 0);
     ifr.ifr_flags |= ( IFF_UP|IFF_POINTOPOINT|IFF_RUNNING|IFF_NOARP|IFF_MULTICAST );
-    // ifr.ifr_flags = (IFF_UP | IFF_POINTOPOINT | IFF_RUNNING | IFF_NOARP | IFF_MULTICAST); // set interface flags
     assert(ioctl(sockfd, SIOCSIFFLAGS, &ifr) == 0);
 
-    // printf("i m here2\n");
     return 0;
 }
 

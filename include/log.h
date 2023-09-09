@@ -20,6 +20,8 @@ const int log_end = 7;
 
 #define mylog(...) log0(__FILE__, __FUNCTION__, __LINE__, __VA_ARGS__)
 
+#define assest_mylog(assest , ...) {if (!(assest)) { log0(__FILE__, __FUNCTION__, __LINE__,log_error,__VA_ARGS__);myexit(log_error);}}
+
 extern int enable_log_color;
 
 

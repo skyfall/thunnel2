@@ -4,7 +4,11 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include "log.h"
+
+
+
 // typedef unsigned int u32_t;
 typedef int i32_t;
 
@@ -15,5 +19,9 @@ typedef short i16_t;
 extern int about_to_exit;
 
 void myexit(int a);
+
+void myexitwithmess(const bool assest,const char* message, ...);
+
+void setnonblocking(int sock);
 
 #endif
